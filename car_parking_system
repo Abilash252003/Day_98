@@ -1,0 +1,156 @@
+//100 Days of RTL
+
+//Abilash P
+
+//Car parking System
+
+module car_parking_system(clk, rst, sensor_inp, money_inp, hour_inp, off_val, pass_out, vacancy_count, balance, stop_out, overfilled_out);
+  
+  parameter OFF             = 3'b000;
+  parameter SENSOR          = 3'b001;
+  parameter VACANT_CHECK    = 3'b010;
+  parameter AMOUNT_COLLECT  = 3'b011;
+  parameter BALANCE         = 3'b100;
+  parameter PASS            = 3'b101;
+  parameter STOP            = 3'b110;
+  parameter OVER            = 3'b111;
+  
+  parameter HALF_FARE   = 5;
+  parameter FULL_FARE   = 10;
+  parameter MAX_VACANCY = 5;
+  
+  input clk, rst, sensor_inp, hour_inp;
+  input [4:0]money_inp;
+  output reg off_val, pass_out, stop_out, overfilled_out;
+  output reg [4:0]balance;
+  output reg [3:0]vacancy_count;
+  
+  reg[2:0]state, next_state;
+  
+  always @(posedge clk)
+    begin
+      if(rst)
+        begin
+          state<=OFF;
+          vacancy_count <= MAX_VACANCY;
+        end
+      else
+        state<=next_state;
+    end
+  
+  always @(*)
+    begin
+      case(state)
+        OFF: begin
+          off_val <= 1;
+          pass_out<= 0;
+          stop_out<= 0;
+          overfilled_out<=0;
+          balance<=0;
+          
+          next_state<=SENSOR;
+        end
+        
+        SENSOR: begin
+          off_val<=0;
+          pass_out<= 0;
+          stop_out<= 0;
+          overfilled_out<=0;
+          balance<=0;
+          
+          if(sensor_inp==1)
+            next_state<=VACANT_CHECK;
+          else
+            next_state<=SENSOR;
+        end
+        
+        VACANT_CHECK: begin
+          off_val<=0;
+          pass_out<= 0;
+          stop_out<= 0;
+          overfilled_out<=0;
+          balance<=0;
+          
+          if(vacancy_count==0)
+            next_state<=OVER;
+          else
+            begin
+              vacancy_count = vacancy_count-1;
+              next_state<=AMOUNT_COLLECT;
+            end
+        end
+        
+        AMOUNT_COLLECT: begin
+          off_val<=0;
+          pass_out<= 0;
+          stop_out<= 0;
+          overfilled_out<=0;
+          balance<=0;
+          
+          if(hour_inp==1)
+            begin
+              if(money_inp==FULL_FARE)
+                next_state<=PASS;
+              if(money_inp<FULL_FARE)
+                next_state<=STOP;
+              if(money_inp>FULL_FARE)
+                next_state<=BALANCE;
+            end
+          else
+            begin
+              if(money_inp==HALF_FARE)
+                next_state<=PASS;
+              if(money_inp<HALF_FARE)
+                next_state<=STOP;
+              if(money_inp>HALF_FARE)
+                next_state<=BALANCE;
+            end
+        end
+        
+        BALANCE: begin
+          off_val<=0;
+          pass_out<= 0;
+          stop_out<= 0;
+          overfilled_out<=0;
+          if(hour_inp==1)
+            balance<=money_inp-FULL_FARE;
+          else
+            balance<=money_inp-HALF_FARE;
+          
+          next_state<=PASS;
+        end
+        
+        PASS: begin
+          off_val<=0;
+          pass_out<= 1;
+          stop_out<= 0;
+          overfilled_out<=0;
+          balance<=0;
+          
+          next_state<=SENSOR;
+        end
+        
+        STOP: begin
+          off_val<=0;
+          pass_out<= 0;
+          stop_out<= 1;
+          overfilled_out<=0;
+          balance<=0;
+          vacancy_count = vacancy_count+1;
+          next_state<=AMOUNT_COLLECT;
+        end
+        
+        OVER: begin
+          off_val<=0;
+          pass_out<= 0;
+          stop_out<= 0;
+          overfilled_out<=1;
+          balance<=0;
+          
+          next_state<=OFF;
+        end
+      endcase
+    end
+endmodule
+
+          
