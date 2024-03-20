@@ -1,0 +1,61 @@
+//100 Days of RTL
+
+//Abilash P
+
+//Car parking System
+
+module car_parking_system_tb();
+  reg clk, rst, sensor_inp, hour_inp;
+  reg [4:0]money_inp;
+  wire off_val, pass_out, stop_out, overfilled_out;
+  wire [4:0]balance;
+  wire [3:0] vacancy_count;
+  
+  
+  car_parking_system DUT (.clk(clk), .rst(rst), .sensor_inp(sensor_inp), .money_inp(money_inp), .hour_inp(hour_inp), .off_val(off_val), .pass_out(pass_out), .vacancy_count(vacancy_count), .balance(balance), .stop_out(stop_out), .overfilled_out(overfilled_out));
+  
+  initial
+    begin
+      clk = 1;
+      forever #5 clk = ~clk;
+    end
+  
+  initial
+    begin
+      sensor_inp = 1;
+      hour_inp   = 1;  //1 for 1hour and 0 for half an hour
+      money_inp  = 5'b11111;
+      rst = 1'b1;
+      #10;
+      rst = 1'b0;
+      #50;
+      
+      money_inp  = 5'b01111;
+      #50;
+      
+      hour_inp   = 0;
+      money_inp  = 5'b00101;
+      #50;
+      
+      money_inp  = 5'b00010;
+      #20;
+      
+      money_inp  = 5'b00111;
+      #50;
+      
+      hour_inp   = 1;
+      money_inp  = 5'b10111;
+      #50;
+    
+      money_inp  = 5'b11111;
+      #100;
+      $finish;
+    end
+  
+  initial
+    begin
+       $dumpfile("dump.vcd");
+       $dumpvars(1);
+     end
+  
+endmodule
